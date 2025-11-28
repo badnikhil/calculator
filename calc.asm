@@ -90,8 +90,11 @@ subtract:
 	call exit
 
 multiply:
+;Not Implemented Yet
+
 
 divide:
+;Not implemented Yet
 
 
 ; whatever needs to be printed should be inside register ->rsi , 
