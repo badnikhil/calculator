@@ -1,3 +1,5 @@
+
+
 section .data
 	msg_for_operator db "Enter Operator (+ - * or /) : " 
 	msg_for_operator_len equ $ - msg_for_operator
@@ -11,7 +13,7 @@ section .bss
 	integer_one_buffer resb 10
 	integer_two_buffer resb 10
 	int_1 resq 1
-	int2 resq 1
+	int_2 resq 1
 	result resq 1
 	result_buffer resb 10
 	result_len_buffer resq 1
@@ -20,7 +22,6 @@ section .text
 	global _start
 
 _start:
-	;print the message for operator
 	mov rsi , msg_for_operator
 	mov rdx , msg_for_operator_len
 	call print
@@ -55,11 +56,20 @@ _start:
 	mov rsi , integer_two_buffer
 	mov rdx , rax 
 	call convert_string_into_integer
-	mov [int2], rax
+	mov [int_2], rax
 	;check what is the operator and call the corresponding subroutine
 	mov al, byte [operator_buffer]
 	cmp al , '+'
 	je addition
+	cmp al , '-'
+	je subtract
+	cmp al , '/'
+	je divide
+	cmp al , '*'
+	je multiply
+
+
+evaluation_done:
 
 	;convert result into string
 	mov rsi , result
@@ -68,6 +78,8 @@ _start:
 	call convert_integer_to_string
 	mov rsi , result_buffer
 	mov rdx , [r10]
+	mov byte[result_buffer + rdx] , 10
+	inc rdx
 	call print
 
 	call exit
@@ -105,39 +117,40 @@ convert_string_into_integer:
 ; adresss to store length of result string should be in register -> r10
 ; Uses register -> rcx as pointer of bytes 
 convert_integer_to_string:
-	;initialize register
-	xor rcx , rcx
-	mov rax , [rsi]
-	mov qword [r10] , 0
-	;loop starts
-	.loop:
-	inc qword [r10]
-	xor rdx , rdx
-	mov rbx , 10 
-	call divide
-	add rdx , '0'
-	mov byte [rdi + rcx] , dl
-	inc rcx
-	cmp rax , 0
-	jne .loop
-	ret
+    xor rcx , rcx
+    mov rax , [rsi]
+    mov qword [r10] , 0
+.loop:
+    inc qword [r10]
+    xor rdx , rdx
+    mov rbx , 10
+    div rbx
+    add rdx , '0'
+    mov byte [rdi + rcx] , dl
+    inc rcx
+    cmp rax , 0
+    jne .loop
+    ret
 
 addition:
 	mov rax , [int_1]
-	add rax , [int2]
+	add rax , [int_2]
 	mov [result] , rax
-	ret
+	jmp evaluation_done
 
 subtract:
 	mov rax , [int_1]
-	sub rax , [int2]
+	sub rax , [int_2]
 	mov [result] , rax
-	ret
+	jmp evaluation_done
 
 
 
 multiply:
-call exit
+mov rax , [int_1]
+mul qword [int_2]
+mov [result] , rax
+jmp evaluation_done
 
 ;higher part of dividend should be in register -> rdx
 ;lower part of dividend should be in register -> rax
@@ -145,8 +158,12 @@ call exit
 ;the return values are in registers -> rax (the quotient) and register -> rdx (Remainder)
 divide:
 xor rdx , rdx
+mov rax , [int_1]
+mov rbx , [int_2]
 div rbx
-ret
+mov [result] , rax
+jmp evaluation_done
+
 
 
 ; whatever needs to be printed should be inside register ->rsi , 
