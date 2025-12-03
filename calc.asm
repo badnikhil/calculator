@@ -115,13 +115,14 @@ convert_string_into_integer:
 ; the address of integer to be converted should be in register -> rsi 
 ; the address of the string where it will be stored should be in register -> rdi
 ; adresss to store length of result string should be in register -> r10
-; Uses register -> rcx as pointer of bytes 
+; Uses register -> rcx as pointer of bytes =
 convert_integer_to_string:
     xor rcx , rcx
     mov rax , [rsi]
-    mov qword [r10] , 0
+    mov  r9 , 0
+
 .loop:
-    inc qword [r10]
+    inc r9
     xor rdx , rdx
     mov rbx , 10
     div rbx
@@ -130,6 +131,20 @@ convert_integer_to_string:
     inc rcx
     cmp rax , 0
     jne .loop
+
+;Reverse the string
+	mov qword [r10] , r9
+	mov rcx , 0
+	dec r9
+.reverse:
+	mov al, byte [rdi + r9]
+	mov bl , byte [rdi + rcx]
+	mov byte [rdi + r9] , bl
+	mov byte [rdi + rcx ] , al
+	inc rcx
+	dec r9
+	cmp rcx , r9
+	jl .reverse
     ret
 
 addition:
